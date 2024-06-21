@@ -31,6 +31,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@sveltejs/adapter-static": "^3.0.2",
 		"@types/qrcode": "^1.5.5",
 		"peerjs": "^1.5.4",
 		"qrcode": "^1.5.3"
