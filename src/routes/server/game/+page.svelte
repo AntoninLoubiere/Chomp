@@ -13,6 +13,11 @@
     })
 </script>
 
+<svelte:window on:beforeunload={e => {
+    e.preventDefault();
+    e.returnValue = "Êtes vous sûr de vouloir arrêter la partie en cours ?";
+    return "Êtes vous sûr de vouloir arrêter la partie en cours ?"
+}} />
 {#if $chompServer}
     <ChompRemoteTournoi game={$currentRemoteTournoi}
         on:chomp={e => chomp($chompServer, $chompServer?.players[$chompServer.id], e.detail.i, e.detail.j)}

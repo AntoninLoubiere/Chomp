@@ -33,6 +33,7 @@ declare global {
 		id: string;
 		name: string;
 		score: number;
+		disconnected: boolean;
 	}
 
 	interface ChompRemoteTournoi extends ChompGrid {

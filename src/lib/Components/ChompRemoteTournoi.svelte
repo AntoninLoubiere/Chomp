@@ -21,7 +21,7 @@
     <ul class:ended={game.status == 'ended'} class="player-board">
         {#each game.turnOrder as id, j (id)}
             {@const p = game.players[id]}
-            <li title="{p.id}" class:currentPlayer={j == game.currentTurn}>{p.name}: {p.score}
+            <li title="{p.id}" class:disconnected={p.disconnected} class:currentPlayer={j == game.currentTurn}>{p.name}: {p.score}
                 {#if game.status == 'ended'}
                     (+ {getGameScore(game, j)})
                 {/if}
@@ -37,6 +37,14 @@
         min-width: min-content;
         justify-content: space-evenly;
         gap: 1rem;
+    }
+
+    .disconnected {
+        font-style: italic;
+    }
+
+    .player-board {
+        width: 40ch;
     }
 
     .ended li {

@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
 	import LinkShare from "$lib/Components/LinkShare.svelte";
-	import { serverStartGame, setServerStatus, updateGameSize, updateServerName } from "$lib/chomp_server";
+	import { cleanDisconnected, serverStartGame, setServerStatus, updateGameSize, updateServerName } from "$lib/chomp_server";
 	import { chompServer, currentRemoteTournoi } from "$lib/stores";
 	import { onMount } from "svelte";
 
@@ -11,6 +11,7 @@
     onMount(() => {
         if ($chompServer) {
             name = $chompServer.players[$chompServer.id].name || '';
+            cleanDisconnected($chompServer)
             if ($chompServer.status == 'in-game') {
                 setServerStatus($chompServer, 'lobby');
             }

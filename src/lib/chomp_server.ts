@@ -1,6 +1,6 @@
 import Peer from 'peerjs'
 import type { DataConnection } from 'peerjs'
-import { chompServer, currentRemoteTournoi } from './stores';
+import { chompServer, currentRemoteTournoi, currentTournoi } from './stores';
 import { get } from 'svelte/store';
 import { randomId } from '$lib/utils'
 import type { MessageProtocol } from './protocol';
@@ -12,6 +12,8 @@ import { base } from '$app/paths';
 export interface ChompServerPlayer {
     conn?: DataConnection;
     id: string;
+    token: string;
+    disconnected: boolean;
     connId: string;
     name: string;
 }
@@ -47,7 +49,8 @@ function _createChompServer(tryOldId = true): Promise<ChompServer> {
             sessionStorage.setItem('server-conn-id', connId);
 
             const players: { [id: string]: ChompServerPlayer } = {};
-            players[id] = { id, connId, name: localStorage.getItem("last-username") || "Hôte" };
+            players[id] = { id, connId, token: '', disconnected: false,
+                name: localStorage.getItem("last-username") || "Hôte" };
             const cs: ChompServer = {
                 peer,
                 id,
@@ -74,17 +77,39 @@ export async function createChompServer() {
 }
 
 function onServerConnetion(cs: ChompServer, conn: DataConnection) {
-    if (cs.status != 'lobby' || conn.metadata.id == undefined) {
+    if (conn.metadata.id == undefined || conn.metadata.id == cs.id) {
+        conn.send({ msg: "error", type: 'invalid-request' } satisfies MessageProtocol)
         conn.close();
         return;
     }
 
-    console.log('Accept', conn.metadata.id)
     const id = conn.metadata.id as string;
+    const token = conn.metadata.token || '' as string
     const name = id.substring(0, 6);
-    broadcastMessage(cs, { msg: 'player-new', name, id });
+    if (cs.players[id] && cs.players[id].token != token) {
+        console.error("Invalid token", id);
+        conn.send({msg: "error", type: 'invalid-token'} satisfies MessageProtocol)
+        conn.close();
+        return;
+    }
+
+    if (cs.status != 'lobby' && cs.players[id]?.token != token) {
+        console.error("Invalid token", id);
+        conn.send({ msg: "error", type: 'invalid-token' } satisfies MessageProtocol)
+        conn.close();
+        return;
+    }
+
+    console.log('Accept', conn.metadata.id, conn.metadata.token)
+    if (cs.status == 'lobby')
+        broadcastMessage(cs, { msg: 'player-new', name, id } satisfies MessageProtocol);
+    else
+        broadcastMessage(cs, {msg: 'player-reconnected', id})
+
     const player = {
         id,
+        token,
+        disconnected: false,
         conn,
         name,
         connId: conn.peer,
@@ -101,6 +126,12 @@ function onServerConnetion(cs: ChompServer, conn: DataConnection) {
             status: cs.status
         } satisfies MessageProtocol)
 
+        if (cs.status == 'in-game') {
+            tournoi.players[id].disconnected = false;
+            currentRemoteTournoi.set(tournoi);
+            conn.send({msg: 'game-tournoi', tournoi} satisfies MessageProtocol)
+        }
+
     });
 
     conn.on('data', m => {
@@ -109,9 +140,20 @@ function onServerConnetion(cs: ChompServer, conn: DataConnection) {
     })
 
     conn.on('close', () => {
-        delete cs.players[id];
-        broadcastMessage(cs, { msg: 'player-remove', id });
-        chompServer.set(cs);
+        if (cs.status == 'lobby') {
+            delete cs.players[id];
+            broadcastMessage(cs, { msg: 'player-remove', id });
+            chompServer.set(cs);
+        } else {
+            delete cs.players[id].conn;
+            cs.players[id].disconnected = true;
+            broadcastMessage(cs, { msg: 'player-disconnected', id });
+            currentRemoteTournoi.update(t => {
+                if (id in t.players)
+                    t.players[id].disconnected = true;
+                return t;
+            })
+        }
     })
 }
 
@@ -133,7 +175,6 @@ function forwardMessage(cs: ChompServer, m: MessageProtocol, from: string) {
 }
 
 function onServerMessage(cs: ChompServer, player: ChompServerPlayer, m: MessageProtocol) {
-    console.log("Received message", m)
     switch (m.msg) {
         case 'player-update-name':
             m.id = player.id;
@@ -153,6 +194,10 @@ function onServerMessage(cs: ChompServer, player: ChompServerPlayer, m: MessageP
 
         case 'game-new-round':
             newChompRound(cs);
+            break;
+
+        default:
+            console.info("Unknown message", m);
             break;
     }
 }
@@ -186,10 +231,12 @@ export function updateGameSize(cs: ChompServer, width: number, height: number) {
 
 export function serverStartGame(cs: ChompServer) {
     currentRemoteTournoi.update(t => {
+        cleanDisconnected(cs);
         const tournoi = newRemoteTournoi(t.width, t.height, Object.values(cs.players).map(p => {return {
             id: p.id,
             name: p.name,
-            score: 0
+            score: 0,
+            disconnected: false
         }}));
         broadcastMessage(cs, {msg: 'game-tournoi', tournoi});
         setServerStatus(cs, 'in-game');
@@ -205,4 +252,12 @@ export function setServerStatus(cs: ChompServer, status: ServerStatus) {
 
 export function sendCurrentTurn(cs: ChompServer, tournoi: ChompRemoteTournoi) {
     broadcastMessage(cs, {msg: 'turn', id: tournoi.turnOrder[tournoi.currentTurn], nb: tournoi.currentTurn});
+}
+
+export function cleanDisconnected(cs: ChompServer) {
+    for (let p of Object.values(cs.players)) {
+        if (p.disconnected)
+            delete cs.players[p.id];
+    }
+    chompServer.set(cs);
 }

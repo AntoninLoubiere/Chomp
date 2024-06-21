@@ -35,18 +35,28 @@ function getId() {
     return id;
 }
 
+function getToken(dest: string) {
+    const key = "user-token-" + dest;
+    let tok = sessionStorage.getItem(key);
+    if (!tok) {
+        tok = randomId();
+        sessionStorage.setItem(key, tok);
+    }
+    return tok;
+}
+
 function _createChompClient(dest: string): Promise<ChompClient> {
     return new Promise((resolve, reject) => {
         const peer = new Peer("", /*{ config: {'iceServers': ICE_SERVERS}}*/);
         peer.on('open', () => {
             const id = getId();
+            const token = getToken(dest);
             let client: ChompClient | undefined = undefined;
 
-            const conn = peer.connect(dest, {metadata: { id }, reliable: true});
+            const conn = peer.connect(dest, { metadata: { id, token }, reliable: true});
             conn.on('open', () => {
                 //@ts-expect-error
                 conn.on('data', (e: MessageProtocol) => {
-                    console.log("Received", e)
                     if (client) {
                         onClientData(client, e);
                         return;
@@ -146,6 +156,24 @@ function onClientData(cc: ChompClient, m: MessageProtocol) {
                 t.currentTurn = m.nb;
                 return t;
             });
+            break;
+
+        case 'player-disconnected':
+            currentRemoteTournoi.update(t => {
+                t.players[m.id].disconnected = true;
+                return t;
+            })
+            break;
+
+        case 'player-reconnected':
+            currentRemoteTournoi.update(t => {
+                t.players[m.id].disconnected = false;
+                return t;
+            })
+            break;
+
+        default:
+            console.log("Unknown message", m);
             break;
     }
 }

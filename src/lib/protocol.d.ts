@@ -10,17 +10,12 @@ export type MessageProtocol =
         players_name: ChompClientPlayer[];
     } |
     {
-        msg: 'player-new';
+        msg: 'player-new' | 'player-update-name';
         name: string;
         id: string;
     } |
     {
-        msg: 'player-update-name',
-        name: string,
-        id: string
-    } |
-    {
-        msg: 'player-remove',
+        msg: 'player-remove' | 'player-disconnected' | 'player-reconnected',
         id: string
     } |
     {
@@ -48,4 +43,8 @@ export type MessageProtocol =
         msg: 'turn',
         id: string,
         nb: number,
+    } |
+    {
+        msg: 'error',
+        type: 'invalid-token' | 'invalid-request'
     }
