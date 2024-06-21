@@ -5,10 +5,11 @@
 	import { goto } from '$app/navigation';
 	import ChompRemoteTournoi from '$lib/Components/ChompRemoteTournoi.svelte';
 	import { sendChompClient, sendNextRound } from '$lib/chomp_client';
+	import { base } from '$app/paths';
 
     onMount(() => {
         if ($chompClient?.status == 'lobby') {
-            goto(`/remote/${$page.params.room}`);
+            goto(`${base}/remote/${$page.params.room}`);
         }
     })
 </script>

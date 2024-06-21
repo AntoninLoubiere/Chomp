@@ -8,6 +8,7 @@ import type { MessageProtocol } from './protocol';
 import type { ServerStatus } from './chomp_server';
 import { goto } from '$app/navigation';
 import { applyChomp } from './chomp_server_game';
+import { base } from '$app/paths';
 // import { ICE_SERVERS } from './iceservers';
 export interface ChompClientPlayer {
     id: string;
@@ -123,9 +124,9 @@ function onClientData(cc: ChompClient, m: MessageProtocol) {
         case 'server-status':
             cc.status = m.status;
             if (m.status == 'in-game') {
-                goto(`/remote/${cc.connId}/game`);
+                goto(`${base}/remote/${cc.connId}/game`);
             } else {
-                goto(`/remote/${cc.connId}`);
+                goto(`${base}/remote/${cc.connId}`);
             }
             break;
 

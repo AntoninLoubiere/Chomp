@@ -7,6 +7,7 @@ import type { MessageProtocol } from './protocol';
 import { goto } from '$app/navigation';
 import { newRemoteTournoi } from '$lib';
 import { chomp, newChompRound } from './chomp_server_game';
+import { base } from '$app/paths';
 // import { ICE_SERVERS } from './iceservers';
 export interface ChompServerPlayer {
     conn?: DataConnection;
@@ -192,7 +193,7 @@ export function serverStartGame(cs: ChompServer) {
         }}));
         broadcastMessage(cs, {msg: 'game-tournoi', tournoi});
         setServerStatus(cs, 'in-game');
-        goto('/server/game');
+        goto(`${base}/server/game`);
         return tournoi;
     })
 }

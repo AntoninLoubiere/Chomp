@@ -90,22 +90,4 @@
         width: 100%;
         margin: 0.25rem 0;
     }
-
-    .rem {
-        padding: 0;
-        height: 100%;
-        font-weight: bold;
-        margin: 0 .2rem;
-        border: none;
-        background-color: unset;
-        cursor: pointer;
-    }
-
-    .rem:hover {
-        color: red;
-    }
-
-    .play {
-        margin: 0.5rem 0;
-    }
 </style>

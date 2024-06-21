@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { base } from '$app/paths';
 	import { page } from '$app/stores';
     import QRCode from 'qrcode'
     export let id: string;
-    $: url = new URL("/remote/" + id, $page.url);
+    $: url = new URL(`${base}/remote/` + id, $page.url);
 
     $: data = QRCode.toDataURL(url.href);
 </script>

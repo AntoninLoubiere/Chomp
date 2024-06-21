@@ -5,6 +5,7 @@
 	import LinkShare from "$lib/Components/LinkShare.svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
+	import { base } from "$app/paths";
 
     let name = "";
 
@@ -12,7 +13,7 @@
         if ($chompClient) {
             name = $chompClient.players[$chompClient.id]?.name || '';
             if ($chompClient.status == 'in-game') {
-                goto(`/remote/${$page.params.room}/game`);
+                goto(`${base}/remote/${$page.params.room}/game`);
             }
         }
     })
@@ -78,28 +79,5 @@
 
     li {
         margin: .25rem 0 ;
-    }
-
-    .bt {
-        width: 100%;
-        margin: 0.25rem 0;
-    }
-
-    .rem {
-        padding: 0;
-        height: 100%;
-        font-weight: bold;
-        margin: 0 .2rem;
-        border: none;
-        background-color: unset;
-        cursor: pointer;
-    }
-
-    .rem:hover {
-        color: red;
-    }
-
-    .play {
-        margin: 0.5rem 0;
     }
 </style>

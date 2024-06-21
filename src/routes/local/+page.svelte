@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { base } from "$app/paths";
 	import { newTournoiFromPlayers } from "$lib";
 	import { currentTournoi } from "$lib/stores";
 
@@ -9,7 +10,7 @@
 
     function play() {
         $currentTournoi = newTournoiFromPlayers(width, height, players);
-        goto('/local/game');
+        goto(`${base}/local/game`);
     }
 </script>
 

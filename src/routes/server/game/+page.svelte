@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { base } from "$app/paths";
 	import ChompRemoteTournoi from "$lib/Components/ChompRemoteTournoi.svelte";
 	import { chomp, newChompRound } from "$lib/chomp_server_game";
 	import { chompServer, currentRemoteTournoi } from "$lib/stores";
@@ -7,7 +8,7 @@
 
     onMount(() => {
         if ($chompServer?.status == 'lobby') {
-            goto('/server');
+            goto(`${base}/server`);
         }
     })
 </script>
