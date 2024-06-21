@@ -261,3 +261,11 @@ export function cleanDisconnected(cs: ChompServer) {
     }
     chompServer.set(cs);
 }
+
+export function kickPlayer(cs: ChompServer, player: ChompServerPlayer) {
+    if (player.id != cs.id) {
+        player.conn?.close();
+        delete cs.players[player.id];
+        chompServer.set(cs);
+    }
+}

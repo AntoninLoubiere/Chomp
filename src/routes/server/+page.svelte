@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/stores";
 	import LinkShare from "$lib/Components/LinkShare.svelte";
-	import { cleanDisconnected, serverStartGame, setServerStatus, updateGameSize, updateServerName } from "$lib/chomp_server";
+	import { cleanDisconnected, kickPlayer, serverStartGame, setServerStatus, updateGameSize, updateServerName } from "$lib/chomp_server";
 	import { chompServer, currentRemoteTournoi } from "$lib/stores";
 	import { onMount } from "svelte";
 
@@ -47,7 +47,9 @@
         <h3>{Object.keys($chompServer.players).length} JOUEURS :</h3>
         <ul>
             {#each Object.values($chompServer.players) as p (p.id)}
-                <li title={p.id}>{p.name}</li>
+                <li title={p.id}>{p.name}
+                {#if p.id != $chompServer.id}<button class="rem" on:click={() => kickPlayer($chompServer, p)}>&Cross;</button>{/if}
+            </li>
             {/each}
         </ul>
         <button class="bt" on:click={() => serverStartGame($chompServer)}>COMMENCER LA PARTIE</button>
@@ -91,4 +93,19 @@
         width: 100%;
         margin: 0.25rem 0;
     }
+
+    .rem {
+        padding: 0;
+        height: 100%;
+        font-weight: bold;
+        margin: 0 .2rem;
+        border: none;
+        background-color: unset;
+        cursor: pointer;
+    }
+
+    .rem:hover {
+        color: red;
+    }
+
 </style>

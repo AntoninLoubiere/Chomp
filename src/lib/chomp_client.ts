@@ -54,6 +54,14 @@ function _createChompClient(dest: string): Promise<ChompClient> {
             let client: ChompClient | undefined = undefined;
 
             const conn = peer.connect(dest, { metadata: { id, token }, reliable: true});
+            conn.on('close', () => {
+                console.log("Closed");
+                goto(`${base}/remote/${dest}/error`)
+                if (!client) {
+                    reject("Closed");
+                }
+            });
+
             conn.on('open', () => {
                 //@ts-expect-error
                 conn.on('data', (e: MessageProtocol) => {
@@ -89,15 +97,20 @@ function _createChompClient(dest: string): Promise<ChompClient> {
                     }
                 })
             })
-    
+
+
             conn.on('error', (e) => {
-                console.log("Error", e)
+                console.error(e);
+                goto(`${base}/remote/${dest}/error`)
                 if (!client) {
-                    reject(e);
+                    reject("Closed");
                 }
             })
         })
-        peer.on('error', console.error)
+        peer.on('error', (e) => {
+            console.error(e);
+            goto(`${base}/remote/${dest}/error`)
+        })
     })
 }
 
