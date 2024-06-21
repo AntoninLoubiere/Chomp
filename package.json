@@ -1,0 +1,38 @@
+{
+	"name": "chomp",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write ."
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^3.2.2",
+		"@sveltejs/kit": "^2.5.17",
+		"@sveltejs/vite-plugin-svelte": "^3.1.1",
+		"@types/eslint": "^8.56.10",
+		"eslint": "^9.5.0",
+		"eslint-config-prettier": "^9.1.0",
+		"eslint-plugin-svelte": "^2.40.0",
+		"globals": "^15.6.0",
+		"prettier": "^3.3.2",
+		"prettier-plugin-svelte": "^3.2.5",
+		"svelte": "^4.2.18",
+		"svelte-check": "^3.8.1",
+		"tslib": "^2.6.3",
+		"typescript": "^5.4.5",
+		"typescript-eslint": "8.0.0-alpha.30",
+		"vite": "^5.3.1"
+	},
+	"type": "module",
+	"dependencies": {
+		"@types/qrcode": "^1.5.5",
+		"peerjs": "^1.5.4",
+		"qrcode": "^1.5.3"
+	}
+}
