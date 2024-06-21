@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { base } from "$app/paths";
 
 	let id = "";
@@ -9,7 +10,7 @@
 	<div>
 		<label for="id">Rejoindre une partie à distance:</label>
 		<input type="text" bind:value={id}>
-		<a href="{base}/remote/{id}"><button>Rejoindre</button></a>
+		<button on:click={() => goto(`${base}/remote/${id}`)}>Rejoindre</button>
 	</div>
 </div>
 
