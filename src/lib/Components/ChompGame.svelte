@@ -3,18 +3,25 @@
 
     export let game: ChompGame;
 
-    function endChomp() {
-        game.currentTurn -= 1;
-        game.status = 'ended';
-    }
-
     function chomp(e: CustomEvent<{i: number, j: number}>) {
-        game.currentTurn = (game.currentTurn + 1) % game.players.length;
+        const i = e.detail.i;
+        const j = e.detail.j;
+        if (game.grid[i] <= j) return;
+
+        for (let k = i; j < game.height && game.grid[k] > j; k++) {
+            game.grid[k] = j;
+        }
+
+        if (i == 0 && j == 0) {
+            game.status = 'ended';
+        } else {
+            game.currentTurn = (game.currentTurn + 1) % game.players.length;
+        }
     }
 </script>
 
 <div class="container">
-    <ChompGrid grid={game} on:chomp={chomp} on:end-chomp={endChomp}/>
+    <ChompGrid grid={game} on:chomp={chomp} />
     <ul class:ended={game.status == 'ended'}>
         {#each game.players as p, i (i)}
             <li class:currentPlayer={i == game.currentTurn}>{p}</li>

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import ChompTournoi from "$lib/Components/ChompTournoi.svelte";
-	import { currentTournoi } from "$lib/stores";
+	import { currentRemoteTournoi } from "$lib/stores";
 
 </script>
 
-<ChompTournoi game={$currentTournoi}/>
+<ChompTournoi game={$currentRemoteTournoi}/>

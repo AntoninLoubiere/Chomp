@@ -10,6 +10,3 @@
 </script>
 
 <slot></slot>
-<a href="/">Lien</a>
-<a href="/server/">Server</a>
-<a href="/server/game">Server Game</a>

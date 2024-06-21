@@ -4,12 +4,13 @@ export function fullChompGrid(width: number, height: number): ChompGrid {
     }
 }
 
-export function newGame(width: number, height: number, nbPlayers: number): ChompGame {
+export function newGame(width: number, height: number, nb_players: number): ChompGame {
     const game: ChompGame = {
         currentTurn: 0,
         status: 'playing',
-        turnOrder: new Array(nbPlayers).fill(0).map((_, i) => i),
-        players: new Array(nbPlayers).fill("").map((_, i) => `Joueur ${i}`),
+        nb_players,
+        turnOrder: new Array(nb_players).fill(0).map((_, i) => i),
+        players: new Array(nb_players).fill("").map((_, i) => `Joueur ${i}`),
         ...fullChompGrid(width, height)
     };
     shuffleArray(game.turnOrder);
@@ -22,6 +23,7 @@ export function newGameFromPlayers(width: number, height: number, players: strin
         currentTurn: 0,
         status: 'playing',
         players,
+        nb_players: players.length,
         turnOrder: new Array(players.length).fill(0).map((_, i) => i),
         ...fullChompGrid(width, height)
     };
@@ -43,8 +45,8 @@ export function newTournoiFromPlayers(width: number, height: number, players: st
     }
 }
 
-export function getGameScore(game: ChompGame, p: number): number {
-    const off = ((game.currentTurn - p + game.players.length) % game.players.length);
+export function getGameScore(game: ChompGame | ChompRemoteTournoi, p: number): number {
+    const off = ((game.currentTurn - p + game.nb_players) % game.nb_players);
     return off;
 }
 
@@ -60,5 +62,22 @@ export function shuffleArray(a: any[]) {
         let temp = a[j];
         a[j] = a[i];
         a[i] = temp;
+    }
+}
+
+export function newRemoteTournoi(width: number, height: number, playersList: ChompTournoiPlayer[]): ChompRemoteTournoi{
+    const turnOrder = playersList.map(p => p.id);
+    shuffleArray(turnOrder);
+    const players: {[id: string]: ChompTournoiPlayer} = {};
+    for (const p of playersList) {
+        players[p.id] = p;
+    }
+    return {
+        players,
+        status: 'playing',
+        currentTurn: 0,
+        nb_players: playersList.length,
+        turnOrder,
+        ...fullChompGrid(width, height)
     }
 }

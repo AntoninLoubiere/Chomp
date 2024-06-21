@@ -1,21 +1,22 @@
 <script lang="ts">
 	import { getGameScore, resetGrid, shuffleArray } from "$lib";
-	import { flip } from "svelte/animate";
-import ChompGrid from "./ChompGrid.svelte";
+    import ChompGrid from "./ChompGrid.svelte";
 
     export let game: ChompTournoi;
 
-    function endChomp() {
-        if (game.status != 'ended') {
-            for (let i = 0; i < game.players.length; i++) {
-                game.score[game.turnOrder[i]] += getGameScore(game, i);
-            }
-            game.status = 'ended';
-        }
-    }
 
     function chomp(e: CustomEvent<{i: number, j: number}>) {
-        if (game.status != 'ended') {
+        const i = e.detail.i;
+        const j = e.detail.j;
+        if (game.grid[i] <= j) return;
+
+        for (let k = i; j < game.height && game.grid[k] > j; k++) {
+            game.grid[k] = j;
+        }
+
+        if (i == 0 && j == 0) {
+            game.status = 'ended';
+        } else {
             game.currentTurn = (game.currentTurn + 1) % game.players.length;
         }
     }
@@ -30,14 +31,14 @@ import ChompGrid from "./ChompGrid.svelte";
 
 <div class="container">
     <div>
-        <ChompGrid grid={game} on:chomp={chomp} on:end-chomp={endChomp}/>
+        <ChompGrid grid={game} on:chomp={chomp}/>
         {#if game.status == 'ended'}
             <button class="next-round" on:click={nextRound}>Manche suivante</button>
         {/if}
     </div>
-    <ul class:ended={game.status == 'ended'} class="player-board">
+    <ul class:ended={game.status == 'ended'}>
         {#each game.turnOrder as i, j (i)}
-            <li animate:flip={{ duration: 1000 }} class:currentPlayer={j == game.currentTurn}>{game.players[i]}: {game.score[i]}
+            <li class:currentPlayer={j == game.currentTurn}>{game.players[i]}: {game.score[i]}
                 {#if game.status == 'ended'}
                     (+ {getGameScore(game, j)})
                 {/if}
@@ -57,10 +58,6 @@ import ChompGrid from "./ChompGrid.svelte";
 
     .ended li {
         color: green;
-    }
-
-    .player-board {
-        width: 200px;
     }
 
     .ended li.currentPlayer {

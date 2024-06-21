@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { newTournoi } from "$lib";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/stores";
 	import LinkShare from "$lib/Components/LinkShare.svelte";
-	import { updateGameSize, updateServerName } from "$lib/chomp_server";
-	import { chompServer, currentTournoi } from "$lib/stores";
+	import { serverStartGame, setServerStatus, updateGameSize, updateServerName } from "$lib/chomp_server";
+	import { chompServer, currentRemoteTournoi } from "$lib/stores";
 	import { onMount } from "svelte";
 
     let name = "";
@@ -10,9 +11,9 @@
     onMount(() => {
         if ($chompServer) {
             name = $chompServer.players[$chompServer.id].name || '';
-        }
-        if ($currentTournoi.width <= 0 || $currentTournoi.height <= 0) {
-            $currentTournoi = newTournoi(10, 10, 0);
+            if ($chompServer.status == 'in-game') {
+                setServerStatus($chompServer, 'lobby');
+            }
         }
     })
 
@@ -25,7 +26,7 @@
 
     function updateSize() {
         if ($chompServer != undefined) {
-            updateGameSize($chompServer, $currentTournoi.width, $currentTournoi.height);
+            updateGameSize($chompServer, $currentRemoteTournoi.width, $currentRemoteTournoi.height);
         }
     }
 </script>
@@ -33,23 +34,22 @@
 <div class="container">
     <div>
         <h3>GRILLE :</h3>
-        <input type="number" id="width" size=4 max="100" min="1" bind:value={$currentTournoi.width}
+        <input type="number" id="width" size=4 max="100" min="1" bind:value={$currentRemoteTournoi.width}
         on:change={updateSize} on:input={updateSize}>
         &times;
-        <input type="number" size=4 min="1" max="100" bind:value={$currentTournoi.height}
+        <input type="number" size=4 min="1" max="100" bind:value={$currentRemoteTournoi.height}
         on:change={updateSize} on:input={updateSize}>
     </div>
     <div>
         <h3>NOM :</h3>
-        <input type="text" bind:value={name} on:change={updateName} on:input={updateName}>
+        <input class="full-input" type="text" bind:value={name} on:change={updateName} on:input={updateName}>
         <h3>{Object.keys($chompServer.players).length} JOUEURS :</h3>
         <ul>
             {#each Object.values($chompServer.players) as p (p.id)}
                 <li title={p.id}>{p.name}</li>
             {/each}
         </ul>
-    </div>
-    <div>
+        <button class="bt" on:click={() => serverStartGame($chompServer)}>COMMENCER LA PARTIE</button>
         <h3>LIEN</h3>
         <LinkShare id={$chompServer.connId}/>
     </div>
@@ -71,6 +71,10 @@
         flex-direction: column;
         align-items: center;
         gap: 1rem;
+    }
+
+    .full-input {
+        width: 100%;
     }
 
     ul {

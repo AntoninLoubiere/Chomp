@@ -10,5 +10,3 @@
 </script>
 
 <slot></slot>
-
-Oui !

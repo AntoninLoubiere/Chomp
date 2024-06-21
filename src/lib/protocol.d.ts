@@ -1,4 +1,5 @@
-import type { ChompPlayerClient } from "./chomp_client";
+import type { ChompClientPlayer } from "./chomp_client";
+import type { ServerStatus } from "./chomp_server";
 
 export type MessageProtocol =
     {
@@ -6,7 +7,7 @@ export type MessageProtocol =
         status: ServerStatus;
         width: number,
         height: number,
-        players_name: ChompPlayerClient[];
+        players_name: ChompClientPlayer[];
     } |
     {
         msg: 'player-new';
@@ -26,4 +27,25 @@ export type MessageProtocol =
         msg: 'game-update-size',
         width: number,
         height: number
+    } |
+    {
+        msg: 'server-status',
+        status: ServerStatus
+    } |
+    {
+        msg: 'game-tournoi',
+        tournoi: ChompRemoteTournoi
+    } |
+    {
+        msg: 'chomp',
+        i: number,
+        j: number
+    } |
+    {
+        msg: 'sync' | 'game-new-round'
+    } |
+    {
+        msg: 'turn',
+        id: string,
+        nb: number,
     }

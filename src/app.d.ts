@@ -19,6 +19,7 @@ declare global {
 
 	interface ChompGame extends ChompGrid {
 		players: string[];
+		nb_players: number;
 		turnOrder: number[];
 		currentTurn: number;
 		status: ChompGameStatus;
@@ -26,6 +27,20 @@ declare global {
 
 	interface ChompTournoi extends ChompGame {
 		score: number[];
+	}
+
+	interface ChompTournoiPlayer {
+		id: string;
+		name: string;
+		score: number;
+	}
+
+	interface ChompRemoteTournoi extends ChompGrid {
+		status: ChompGameStatus;
+		turnOrder: string[];
+		currentTurn: number;
+		nb_players: number;
+		players: {[id: string]: ChompTournoiPlayer};
 	}
 }
 

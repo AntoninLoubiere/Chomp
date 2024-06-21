@@ -1,14 +1,19 @@
 <script lang="ts">
-	import { chompClient, currentTournoi } from "$lib/stores";
+	import { chompClient, currentRemoteTournoi } from "$lib/stores";
     import { updateClientName } from "$lib/chomp_client";
 	import { onMount } from "svelte";
 	import LinkShare from "$lib/Components/LinkShare.svelte";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/stores";
 
     let name = "";
 
     onMount(() => {
         if ($chompClient) {
             name = $chompClient.players[$chompClient.id]?.name || '';
+            if ($chompClient.status == 'in-game') {
+                goto(`/remote/${$page.params.room}/game`);
+            }
         }
     })
 
@@ -18,12 +23,13 @@
             updateClientName($chompClient, name);
         }
     }
+
 </script>
 {#if $chompClient}
 <div class="container">
     <div class="center">
         <label for="width">GRILLE :</label>
-        {$currentTournoi.width}&times;{$currentTournoi.height}
+        {$currentRemoteTournoi.width}&times;{$currentRemoteTournoi.height}
     </div>
     <div>
         <label for="name">NOM :</label>
@@ -34,16 +40,18 @@
                 <li title="{p.id}">{p.name}</li>
             {/each}
         </ul>
-        <div>
-            <h3>LIEN</h3>
-            <LinkShare id={$chompClient.connId}/>
-        </div>
+        <h3>LIEN</h3>
+        <LinkShare id={$chompClient.connId}/>
     </div>
 </div>
 {/if}
 <style>
     .center {
         text-align: center;;
+    }
+
+    input {
+        width: 100%
     }
 
     label, h3 {

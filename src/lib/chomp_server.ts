@@ -1,11 +1,14 @@
 import Peer from 'peerjs'
 import type { DataConnection } from 'peerjs'
-import { chompServer, currentTournoi } from './stores';
+import { chompServer, currentRemoteTournoi } from './stores';
 import { get } from 'svelte/store';
 import { randomId } from '$lib/utils'
 import type { MessageProtocol } from './protocol';
+import { goto } from '$app/navigation';
+import { newRemoteTournoi } from '$lib';
+import { chomp, newChompRound } from './chomp_server_game';
 // import { ICE_SERVERS } from './iceservers';
-export interface ChompPlayer {
+export interface ChompServerPlayer {
     conn?: DataConnection;
     id: string;
     connId: string;
@@ -20,7 +23,7 @@ export interface ChompServer {
     id: string;
     connId: string;
     players: {
-        [id: string]: ChompPlayer;
+        [id: string]: ChompServerPlayer;
     };
 }
 
@@ -42,8 +45,8 @@ function _createChompServer(tryOldId = true): Promise<ChompServer> {
             console.log("Server Connected", { id, connId });
             sessionStorage.setItem('server-conn-id', connId);
 
-            const players: { [id: string]: ChompPlayer } = {};
-            players[id] = { id, connId, name: "Hôte" };
+            const players: { [id: string]: ChompServerPlayer } = {};
+            players[id] = { id, connId, name: localStorage.getItem("last-username") || "Hôte" };
             const cs: ChompServer = {
                 peer,
                 id,
@@ -88,7 +91,7 @@ function onServerConnetion(cs: ChompServer, conn: DataConnection) {
     cs.players[id] = player;
     chompServer.set(cs);
     conn.on('open', () => {
-        const tournoi = get(currentTournoi)
+        const tournoi = get(currentRemoteTournoi)
         conn.send({
             msg: 'conn-accepted',
             width: tournoi.width,
@@ -112,7 +115,7 @@ function onServerConnetion(cs: ChompServer, conn: DataConnection) {
 }
 
 
-function broadcastMessage(cs: ChompServer, m: MessageProtocol) {
+export function broadcastMessage(cs: ChompServer, m: MessageProtocol) {
     for (let p of Object.values(cs.players)) {
         if (p.conn) {
             p.conn.send(m);
@@ -128,7 +131,7 @@ function forwardMessage(cs: ChompServer, m: MessageProtocol, from: string) {
     }
 }
 
-function onServerMessage(cs: ChompServer, player: ChompPlayer, m: MessageProtocol) {
+function onServerMessage(cs: ChompServer, player: ChompServerPlayer, m: MessageProtocol) {
     console.log("Received message", m)
     switch (m.msg) {
         case 'player-update-name':
@@ -138,6 +141,27 @@ function onServerMessage(cs: ChompServer, player: ChompPlayer, m: MessageProtoco
             cs.players[player.id].name = m.name;
             chompServer.set(cs);
             break;
+
+        case 'sync':
+            syncPlayer(cs, player);
+            break;
+
+        case 'chomp':
+            chomp(cs, player, m.i, m.j);
+            break;
+
+        case 'game-new-round':
+            newChompRound(cs);
+            break;
+    }
+}
+
+export function syncPlayer(cs: ChompServer, player: ChompServerPlayer) {
+    if (cs.status == 'in-game') {
+        const tournoi = get(currentRemoteTournoi);
+        player.conn?.send({ msg: 'game-tournoi', tournoi } satisfies MessageProtocol)
+    } else {
+        player.conn?.send({ msg: 'server-status', status: 'lobby' } satisfies MessageProtocol);
     }
 }
 
@@ -151,9 +175,33 @@ export function stopChompServer() {
 }
 
 export function updateServerName(cs: ChompServer, name: string) {
+    localStorage.setItem("last-username", name);
     broadcastMessage(cs, { msg: 'player-update-name', id: cs.id, name })
 }
 
 export function updateGameSize(cs: ChompServer, width: number, height: number) {
     broadcastMessage(cs, {msg: 'game-update-size', width, height})
+}
+
+export function serverStartGame(cs: ChompServer) {
+    currentRemoteTournoi.update(t => {
+        const tournoi = newRemoteTournoi(t.width, t.height, Object.values(cs.players).map(p => {return {
+            id: p.id,
+            name: p.name,
+            score: 0
+        }}));
+        broadcastMessage(cs, {msg: 'game-tournoi', tournoi});
+        setServerStatus(cs, 'in-game');
+        goto('/server/game');
+        return tournoi;
+    })
+}
+
+export function setServerStatus(cs: ChompServer, status: ServerStatus) {
+    cs.status = status;
+    broadcastMessage(cs, { msg: 'server-status', status: cs.status });
+}
+
+export function sendCurrentTurn(cs: ChompServer, tournoi: ChompRemoteTournoi) {
+    broadcastMessage(cs, {msg: 'turn', id: tournoi.turnOrder[tournoi.currentTurn], nb: tournoi.currentTurn});
 }
