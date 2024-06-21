@@ -1,15 +1,20 @@
 <script lang="ts">
-	import { newTournoi } from "$lib";
-	import ChompTournoi from "$lib/Components/ChompTournoi.svelte";
+	import { base } from "$app/paths";
 
-	let width = 10;
-	let height = 12;
-	let players = 3;
-	let game = newTournoi(width, height, players);
+	let id = "";
 </script>
-<div>
-	<input type="number" bind:value={width}/>
-	<input type="number" bind:value={height}/>
-	<button on:click={() => game = newTournoi(width, height, players)}>Nouvelle grille</button>
+<div class="container">
+	<a href="{base}/local">Partie en local</a>
+	<a href="{base}/server">Créer une partie à distance</a>
+	<div>
+		<label for="id">Rejoindre une partie à distance:</label>
+		<input type="text" bind:value={id}>
+		<a href="{base}/remote/{id}"><button>Rejoindre</button></a>
+	</div>
 </div>
-<ChompTournoi {game}></ChompTournoi>
+
+<style>
+	.container {
+		display: grid;
+	}
+</style>
